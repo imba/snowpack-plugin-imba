@@ -1,5 +1,5 @@
 {
-  "name": "imba/imba-snowpack",
+  "name": "imba-snowpack",
   "version": "0.0.1",
   "main": "plugin.js",
   "author": "eulores",
