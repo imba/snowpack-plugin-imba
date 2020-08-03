@@ -1,18 +1,56 @@
 {
   "name": "imba-snowpack",
   "version": "0.0.1",
-  "main": "plugin.js",
-  "author": "eulores",
+  "description": "",
+  "author": "eulores <43118918+eulores@users.noreply.github.com>",
   "license": "MIT",
-  "publishConfig": {
-    "access": "public"
+  "main": "src/index.js",
+  "scripts": {
+    "build": "pika build",
+    "deploy": "pika publish",
+    "version": "npm run build"
   },
-  "dependencies": {
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imba/imba-snowpack.git"
+  },
+  "keywords": [
+    "imba",
+    "snowpack",
+    "plugin"
+  ],
+  "@pika/pack": {
+    "pipeline": [
+      [
+        "@pika/plugin-standard-pkg"
+      ],
+      [
+        "@pika/plugin-build-node",
+        {
+          "minNodeVersion": "10"
+        }
+      ],
+      [
+        "@pika/plugin-build-types"
+      ]
+    ]
   },
   "devDependencies": {
-    "imba": "^2.0.0-alpha.70",
+    "@pika/pack": "^0.5.0",
+    "@pika/plugin-build-node": "^0.9.2",
+    "@pika/plugin-build-types": "^0.9.2",
+    "@pika/plugin-standard-pkg": "^0.9.2",
     "snowpack": "^2.7.5",
+    "typescript": "^3.9.7"
+  },
+  "bugs": {
+    "url": "https://github.com/imba/imba-snowpack/issues"
+  },
+  "homepage": "https://github.com/imba/imba-snowpack#readme",
+  "dependencies": {
+    "imba": "^2.0.0-alpha.70",
     "convert-source-map": "^1.7.0",
+    "esbuild": "^0.6.15",
     "fdir": "^4.0.0",
     "fs-extra": "^9.0.1",
     "source-map": "^0.7.3",

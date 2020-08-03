@@ -1,6 +1,4 @@
-/*
-imba/imba-snowpack written 2020 by eulores and released under MIT license.
-*/
+// imba-snowpack written 2020 by eulores and released under MIT license
 
 const fs = require('fs');
 const fse = require('fs-extra');
@@ -45,7 +43,7 @@ async function prependCode(srcCode, prefix, srcMap={}) {
 }
 
 // new plugin format supported by snowpack 2.7.0 onwards
-module.exports = function(snowpackConfig, pluginOptions) {
+const plugin = function(snowpackConfig, pluginOptions) {
   const imbaHelper = "imba/dist/imba.js";
   let entrypoints = pluginOptions.entrypoints;
   if (typeof entrypoints === 'string') entrypoints = [entrypoints];
@@ -57,7 +55,6 @@ module.exports = function(snowpackConfig, pluginOptions) {
   }
   pluginOptions.entrypoints = entrypoints.map((entry) => path.changeExt(path.basename(entry), 'js'));
   return {
-    // name: 'snowpack-plugin-imba',
     name: 'imba-snowpack',
     resolve: {
       input: ['.imba', '.imba2'],
@@ -162,3 +159,5 @@ module.exports = function(snowpackConfig, pluginOptions) {
 
   }
 }
+
+export default plugin;
