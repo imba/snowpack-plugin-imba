@@ -2,7 +2,7 @@
   "name": "imba/imba-snowpack",
   "version": "0.0.1",
   "main": "plugin.js",
-  "author": "eulores <eulores@gmail.com>",
+  "author": "eulores",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
