@@ -1,0 +1,22 @@
+{
+  "name": "imba/imba-snowpack",
+  "version": "0.0.1",
+  "main": "plugin.js",
+  "author": "eulores <eulores@gmail.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "imba": "^2.0.0-alpha.70",
+    "snowpack": "^2.7.5",
+    "convert-source-map": "^1.7.0",
+    "fdir": "^4.0.0",
+    "fs-extra": "^9.0.1",
+    "source-map": "^0.7.3",
+    "tmp": "^0.2.1",
+    "upath": "^1.2.0"
+  }
+}
