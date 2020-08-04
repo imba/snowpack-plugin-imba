@@ -103,6 +103,15 @@ Once ready to build for publishing on a web server, execute:
 
 Copy the contents of `./build` to your web server, or launch a local web server pointing to `./build`.
 
+### Or time to study?
+
+Edit `snowpack.config.json`
+- set `sourceMap` to `true` inside `installOptions`
+- set `bundle` to `false` inside `devOptions`
+
+Launch `npx snowpack build`
+
+Inspect the amazing Imba code transformation by uploading the generated `.js` files to the [sourcemap visualizer](https://sokra.github.io/source-map-visualization/).
 
 ## Reference
 
