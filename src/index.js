@@ -17,7 +17,7 @@ function unlinkRmParent(filename) {
     fs.unlinkSync(filename);
   } catch {};
   do {
-    const filename = path.dirname(filename);
+    filename = path.dirname(filename);
     if (fs.readdirSync(filename).length) return;
     fs.rmdirSync(filename);
   } while(true);
