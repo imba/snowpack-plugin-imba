@@ -2,15 +2,50 @@
 
 const fs = require('fs');
 const fse = require('fs-extra');
-const {fdir} = require('fdir');
 const tmp = require('tmp');
 const path = require('upath'); // compatible with Windows idiosyncrasies
 const sm = require('source-map')
-const convert = require('convert-source-map')
 const imbac = require('imba/dist/compiler.js');
 const {buildSync} = require('esbuild')
 
 let ifDef = (maybeUndef, other) => (maybeUndef===undefined)?other:maybeUndef;
+
+function walk(dir) {
+  const paths = [];
+  const dirs = [dir];
+  let i = 0;
+  let k = 0;
+  const js = {};
+  const html = [];
+  while (i <= k) {
+    const dir = dirs[i];
+    const dirents = fs.readdirSync(dir, {withFileTypes: true});
+    dirents.forEach(
+      function(dirent) {
+        let fullPath = dir + path.sep + dirent.name;
+        if (dirent.isDirectory()) {
+          dirs.push(fullPath);
+          k++;
+        } else {
+          paths.push(fullPath);
+          let lName = dirent.name.toLowerCase();
+          // let lName = dirent.name.toLowerCase();
+          if (lName.endsWith('.js')) {
+            js[lName.slice(0, -3)] = fullPath;
+          } else if (lName.endsWith('.html')) {
+            html.push(fullPath);
+          }
+        }
+      }
+    );
+    i++;
+  }
+  return {
+    paths: paths,
+    js: js,
+    html: html
+  };
+}
 
 function unlinkRmParent(filename) {
   try {
@@ -25,17 +60,16 @@ function unlinkRmParent(filename) {
 
 async function prependCode(srcCode, prefix, srcMap={}) {
   try {
-    // console.log("srcMap", srcMap);
     const dstFile = srcMap.file;
     const sourceMap = await new sm.SourceMapConsumer(srcMap);
     const node = sm.SourceNode.fromStringWithSourceMap(srcCode, sourceMap);
     sourceMap.destroy();
     node.prepend(prefix);
     let {code: dstCode, map: dstMap} = node.toStringWithSourceMap({ file: dstFile });
-    dstCode = convert.removeComments(dstCode);
-    dstCode = convert.removeMapFileComments(dstCode);
-    dstCode = dstCode + "\n" + convert.fromObject(dstMap).toComment();
-    // console.log("dstMap", convert.fromJSON(dstMap.toString()).toObject());
+    dstCode = dstCode.replace(/\/[\/*][@#]\s+sourceMappingURL=.+$/mg, '')
+    dstCode = dstCode +
+    '\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,' +
+    Buffer.from(dstMap.toString(), 'utf8').toString('base64');
     return dstCode;
   } catch(e) {
     console.log("Error patching source map:", e);
@@ -54,7 +88,7 @@ const plugin = function(snowpackConfig, pluginOptions) {
     console.log('  "plugins": [ ["./plugin/imba-snowpack", {"entrypoints":["main.imba"]}] ]');
     return;
   }
-  pluginOptions.entrypoints = entrypoints.map((entry) => path.changeExt(path.basename(entry), 'js'));
+  pluginOptions.entrypoints = entrypoints.map((entry) => path.trimExt(path.basename(entry)));
   return {
     name: 'imba-snowpack',
     resolve: {
@@ -90,16 +124,13 @@ const plugin = function(snowpackConfig, pluginOptions) {
 
     async optimize({ buildDirectory }) {
       if (snowpackConfig.devOptions.bundle) {
-        const fileList = new fdir()
-          .withBasePath()
-          .crawl(buildDirectory)
-          .sync();
-
-        const entrypoints = fileList.filter(
-          (filePath) => pluginOptions.entrypoints.some(
-            (suffix) => filePath.endsWith(suffix)
-          )
-        );
+        const res = walk(buildDirectory);
+        /*
+            paths: array
+            js: mapping
+            html: array
+        */
+        const entrypoints = pluginOptions.entrypoints.map(needle => res.js[needle.toLowerCase()]);
         // console.log(entrypoints);
 
         // console.log('Snowpack config:', snowpackConfig);
