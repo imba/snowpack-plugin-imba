@@ -1,6 +1,6 @@
 # imba-snowpack
 
-Use the [Imba compiler](https://www.imba.io/) to build all your `*.imba` files from source using [snowpack](https://www.snowpack.dev/).
+Use the [Imba compiler](https://v2.imba.io/) (v2) to build all your `*.imba` files from source using [snowpack](https://www.snowpack.dev/).
 
 ## Install
 
