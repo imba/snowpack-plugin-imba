@@ -151,7 +151,7 @@ Any additional `imba-snowpack` plugin parameters are passed directly to the [Imb
 
 #### installOptions
 
-Setting `sourceMap` to `true` only has an effect during development (`snowpack dev`), or in production once `bundle` is set to `false`.
+Setting `sourceMap` to `true` only has an effect during development (`snowpack dev`), or in production (`snowpack build`) once `bundle` is set to `false`.
 
 ```js
 "installOptions": {
