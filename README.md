@@ -128,7 +128,7 @@ Assets placed in source directories will be copied as is to destination director
 
 Most `imba-snowpack` plugin parameters are optional, except for `entrypoints`.
 
-- `entrypoints` defines scripts loaded from html and forming the main entry points to your imba code. Can be `imba` or `js`. Only the script name is relevant, path and extension are ignored.
+- `entrypoints` defines scripts loaded from html and forming the main entry points to your imba code. Can be `.imba` or `.js`. Only the script name is relevant, path and extension are ignored.
 - `target` specifies intended browser capabilities support. Check [esbuild](https://github.com/evanw/esbuild#javascript-syntax-support) for additional details.
 - `splitting` enables code splitting during production builds. This has not been tested.
 - `minify` does code minification during production builds.
@@ -151,7 +151,7 @@ Any additional `imba-snowpack` plugin parameters are passed directly to the [Imb
 
 #### installOptions
 
-The `sourceMap` setting only has an effect on the intermediate building step, visible only once `bundle` is set to false and launching `snowpack build`.
+Setting `sourceMap` to `true` only has an effect on the intermediate building step, visible after `snowpack build` with `bundle` set to `false`.
 
 ```js
 "installOptions": {
@@ -161,9 +161,9 @@ The `sourceMap` setting only has an effect on the intermediate building step, vi
 
 #### devOptions
 
-`snowpack dev` sets up a local development web server. To launch a web browser, specify its name in `open`.
+`snowpack dev` sets up a local development web server. To launch a web browser, specify its name in `open`, otherwise set `open` to `false`.
 
-Setting `bundle` to `false` skips the last bundling step. Useful to inspect the compiled `js` files or to test run the modules comprising the application. If 'sourceMap' is enabled, then the `js` files are mapped to the `imba` sources.
+Setting `bundle` to `false` skips the last bundling step. Useful to inspect the compiled `.js` files or to test run the modules comprising the application. If `sourceMap` is enabled, then the `.js` files are mapped to the `.imba` sources.
 
 ```js
 "devOptions": {
