@@ -17,7 +17,7 @@ function unlinkRmParent(filename) {
     fs.unlinkSync(filename);
   } catch {};
   do {
-    filename = path.dirname(filename);
+    const filename = path.dirname(filename);
     if (fs.readdirSync(filename).length) return;
     fs.rmdirSync(filename);
   } while(true);
@@ -26,7 +26,7 @@ function unlinkRmParent(filename) {
 async function prependCode(srcCode, prefix, srcMap={}) {
   try {
     // console.log("srcMap", srcMap);
-    dstFile = srcMap.file;
+    const dstFile = srcMap.file;
     const sourceMap = await new sm.SourceMapConsumer(srcMap);
     const node = sm.SourceNode.fromStringWithSourceMap(srcCode, sourceMap);
     sourceMap.destroy();
@@ -37,7 +37,8 @@ async function prependCode(srcCode, prefix, srcMap={}) {
     dstCode = dstCode + "\n" + convert.fromObject(dstMap).toComment();
     // console.log("dstMap", convert.fromJSON(dstMap.toString()).toObject());
     return dstCode;
-  } catch {
+  } catch(e) {
+    console.log("Error patching source map:", e);
     return prefix + srcCode; // if anything fails, ignore sourceMap but continue prepending the code
   }
 }
@@ -63,7 +64,7 @@ const plugin = function(snowpackConfig, pluginOptions) {
     knownEntrypoints: [imbaHelper],
 
     async load({filePath, fileExt, isDev}) {
-      options = {
+      const options = {
         standalone: true,
         sourceMap: ifDef(snowpackConfig.installOptions.sourceMap, true),
         evaling: true,
@@ -88,7 +89,6 @@ const plugin = function(snowpackConfig, pluginOptions) {
     }, // end function load
 
     async optimize({ buildDirectory }) {
-      console.log('Started OPTIMIZE step!');
       if (snowpackConfig.devOptions.bundle) {
         const fileList = new fdir()
           .withBasePath()
@@ -105,7 +105,7 @@ const plugin = function(snowpackConfig, pluginOptions) {
         // console.log('Snowpack config:', snowpackConfig);
         tmp.setGracefulCleanup();
         const {name: tmpDir, removeCallback} = tmp.dirSync({prefix: 'esbuild_', unsafeCleanup: true});
-        metaFile = path.join(tmpDir, 'meta.json');
+        const metaFile = path.join(tmpDir, 'meta.json');
         const q = (x) => x&&(x+':')||''
         const esbuildMsg = (type, text, loc) => (loc&&(q(loc.file)+q(loc.line)+q(loc.column)+' ')||'') + `esbuild bundler ${type}: ${text}`;
         let result = false;
@@ -132,7 +132,7 @@ const plugin = function(snowpackConfig, pluginOptions) {
           return;
         }
         for (const {loc, text} of result.warnings||[]) console.log(esbuildMsg('warning', text, loc));
-        meta = JSON.parse(fs.readFileSync(metaFile, { encoding: 'utf-8' }));
+        const meta = JSON.parse(fs.readFileSync(metaFile, { encoding: 'utf-8' }));
         // console.log(meta);
         let lookup = {};
         let lookupMove = {};
@@ -150,7 +150,11 @@ const plugin = function(snowpackConfig, pluginOptions) {
         unlinkRmParent(path.join(snowpackConfig.devOptions.out, snowpackConfig.buildOptions.webModulesUrl, 'import-map.json'));
         unlinkRmParent(path.join(snowpackConfig.devOptions.out, snowpackConfig.buildOptions.metaDir, 'env.js'));
         for (const [k, v] of Object.entries(lookupMove)) {
-          fse.moveSync(k, v, {overwrite: true}); // creates dst directories if needed
+          try {
+            fse.moveSync(k, v, {overwrite: true}); // creates dst directories if needed
+          } catch(e) {
+            console.log("Error moving files out of temp directory:", e);
+          }
         }
         removeCallback(); // cleanup and delete temp directory
         snowpackConfig.buildOptions.minify = false; // not anymore required after this step!

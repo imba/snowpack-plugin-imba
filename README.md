@@ -1,64 +1,68 @@
-# imba/imba-snowpack
+# imba-snowpack
 
-Use the [IMBA compiler](https://www.imba.io/) to build your `.imba` files from source.
+Use the [Imba compiler](https://www.imba.io/) to build all your `*.imba` files from source using [snowpack](https://www.snowpack.dev/).
 
+## Install
+
+```sh
+# npm:
+npm install --save-dev imba-snowpack
+# yarn:
+yarn --dev add imba-snowpack
 ```
-npm install --save-dev imba/imba-snowpack
-```
-or
-```
-yarn -D add imba/imba-snowpack
-```
+
+## Usage
+
+Adapt `snowpack.config.json` with the plugin pointing to the main script.
 
 ```js
-// snowpack.config.json -or- snowpack section inside package.json
 {
-  "plugins": [["imba/imba-snowpack", { /* see "Plugin Options" below */}]]
+  "plugins": [["imba-snowpack", { "entrypoints": ["app-root"]}]]
 }
 ```
 
-#### Bare bones package.json file
+## Quick start
 
+### Create a sample directory and download the plugin
+
+```sh
+mkdir sample
+cd sample
+yarn init
+yarn --dev add imba-snowpack
+```
+
+### Create a minimal snowpack configuration file
+
+#### ./snowpack.config.json
 ```js
 {
-  "scripts": {
-    "dev": "snowpack dev",
-    "build": "snowpack build"
+  "mount": {
+    "src": "/static",
+    "public": "/"
   },
-  "snowpack": {
-    "mount": {
-      "src": "/static",
-      "public": "/"
-    },
-    "plugins": [
-      [
-        "imba/imba-snowpack",
-        {
-          "entrypoints": ["app-root"]
-        }
-      ]
-    ],
-    "installOptions": {
-    },
-    "devOptions": {
-      "open": "default"
-    },
-    "buildOptions": {
-    }
+  "plugins": [
+    [
+      "imba-snowpack",
+      {
+        "entrypoints": ["app-root"]
+      }
+    ]
+  ],
+  "installOptions": {
   },
-  "dependencies": {
-    "imba": "^2.0.0-alpha.70",
-    "snowpack": "^2.7.5"
+  "devOptions": {
+    "open": "default",
+    "bundle": true
+  },
+  "buildOptions": {
   }
 }
 ```
 
-Put your *.imba files into ./src and *.html and the rest into ./public.
+### Create some source files
 
-The main script file should be named app-root.js
-
-#### ./index.html
-
+#### ./public/index.html
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -74,8 +78,8 @@ The main script file should be named app-root.js
 ```
 
 #### ./src/app-root.imba
-
-```
+```html
+// use TABS to indent the code. Check how you save the source in your editor!
 tag app-root
     def render
         <self>
@@ -84,55 +88,96 @@ tag app-root
 imba.mount <app-root>
 ```
 
-#### Plugin Options
+### Start developing your application.
 
-These options are read from the snowpack section:
-- `installOptions.sourceMap`, default is true
-- `buildOptions.minify`, default is true
+`npx snowpack dev`
 
-These options are read from the embedded plugin section:
-- `splitting`, default is false
-- `target`, default is es2017
-- `minify`, default is true
+Any time you modify the sources, the application will reload in the web browser (active and instant hmr).
 
-Mount source directories containing imba sources and other assets to destination paths (public, src).
 
-Assets are copied as is, imba sources are compiled to javascript and bundled ("/", "/static").
+### Ready to publish?
 
-Define one or several main imba source entry points (only script name, path and extension are ignored) in the plugin options:
+Once ready to build for publishing on a web server, execute:
 
-```
-package.json
-{
-  "scripts": {
-    "start": "snowpack dev",
-    "build": "snowpack build",
-    "web": "http-server build -o --cors -c-1"
-  },
-  "snowpack": {
-    "mount": {
-      "src": "/static",
-      "public": "/"
-    },
-    "plugins": [
-      [
-        "./plugin/imba-snowpack",
-        {
-          "entrypoints": ["app-root"]
-        }
-      ]
-    ]
-  }
+`npx snowpack build`
+
+Copy the contents of `./build` to your web server, or launch a local web server pointing to `./build`.
+
+
+## Reference
+
+### Relevant snowpack options
+
+Full details on all configuration options available at the [snowpack website](https://www.snowpack.dev/#all-config-options).
+
+#### mount
+
+`mount` maps all your source directories to corresponding destination directories (found under `./build`).
+
+Development of source files takes place in the source directories only.
+
+Assets placed in source directories will be copied as is to destination directories.
+
+```js
+"mount": {
+  "source directory": "destination directory"
 }
 ```
 
-Open points:
+#### plugins
 
-- Choose bundle name and location (config?)
-- hmr does dumb page reloading, should instead reinstantiate only affected imba modules
-- consolidate npm modules to lower amount of dependencies
-- use cheerio to find entrypoints within HTML files
-- use native log functionality and colorize output accordingly
+Most `imba-snowpack` plugin parameters are optional, except for `entrypoints`.
 
+- `entrypoints` defines scripts loaded from html and forming the main entry points to your imba code. Can be `imba` or `js`. Only the script name is relevant, path and extension are ignored.
+- `target` specifies intended browser capabilities support. Check [esbuild](https://github.com/evanw/esbuild#javascript-syntax-support) for additional details.
+- `splitting` enables code splitting during production builds. This has not been tested.
+- `minify` does code minification during production builds.
 
-Any extra plugin `options` are passed directly to the IMBA compiler. See [here](https://github.com/imba/imba/tree/master/src/compiler) for a list of supported options.
+Any additional `imba-snowpack` plugin parameters are passed directly to the [Imba compiler](https://github.com/imba/imba/tree/master/src/compiler).
+
+```js
+"plugins": [
+  [
+    "imba-snowpack",
+    {
+      "entrypoints": ["main script for subproject 1", "main script for subproject 2"],
+      "target": "es2017",
+      "splitting": false,
+      "minify": true
+    }
+  ]
+]
+```
+
+#### installOptions
+
+The `sourceMap` setting only has an effect on the intermediate building step, visible only once `bundle` is set to false and launching `snowpack build`.
+
+```js
+"installOptions": {
+  "sourceMap": true
+}
+```
+
+#### devOptions
+
+`snowpack dev` sets up a local development web server. To launch a web browser, specify its name in `open`.
+
+Setting `bundle` to `false` skips the last bundling step. Useful to inspect the compiled `js` files or to test run the modules comprising the application. If 'sourceMap' is enabled, then the `js` files are mapped to the `imba` sources.
+
+```js
+"devOptions": {
+  "open": "default",
+  "bundle": true
+}
+```
+
+#### buildOptions
+
+Javascript code minification, if enabled, only happens during bundling for production.
+
+```js
+"buildOptions": {
+  "minify": true
+}
+```
