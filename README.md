@@ -13,7 +13,7 @@ yarn --dev add imba-snowpack
 
 ## Usage
 
-Adapt `snowpack.config.json` with the plugin pointing to the main script.
+Adapt `snowpack.config.json` with the plugin pointing to the main script. Remove any other bundling plugins from snowpack, such as `webpack` or `parcel`, they are not needed.
 
 ```js
 {
