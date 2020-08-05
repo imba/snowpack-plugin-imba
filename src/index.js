@@ -1,14 +1,14 @@
 // imba-snowpack written 2020 by eulores and released under MIT license
 
 const fs = require('fs');
-const fse = require('fs-extra');
-const tmp = require('tmp');
 const path = require('upath'); // compatible with Windows idiosyncrasies
 const sm = require('source-map')
 const imbac = require('imba/dist/compiler.js');
 const {buildSync} = require('esbuild')
 
-let ifDef = (maybeUndef, other) => (maybeUndef===undefined)?other:maybeUndef;
+function debug(wp, ...args) {
+  if (debug.active) console.log(`WP${wp}:`, ...args);
+}
 
 function walk(dir) {
   const paths = [];
@@ -72,13 +72,15 @@ async function prependCode(srcCode, prefix, srcMap={}) {
     Buffer.from(dstMap.toString(), 'utf8').toString('base64');
     return dstCode;
   } catch(e) {
-    console.log("Error patching source map:", e);
+    debug(1, "Error patching source map:", e);
     return prefix + srcCode; // if anything fails, ignore sourceMap but continue prepending the code
   }
 }
 
 // new plugin format supported by snowpack 2.7.0 onwards
 const plugin = function(snowpackConfig, pluginOptions) {
+  if (pluginOptions.debug==true) debug.active = true;
+  debug(1, 'jose','pepe',35,'andi');
   const imbaHelper = "imba/dist/imba.js";
   let entrypoints = pluginOptions.entrypoints;
   if (typeof entrypoints === 'string') entrypoints = [entrypoints];
@@ -100,7 +102,7 @@ const plugin = function(snowpackConfig, pluginOptions) {
     async load({filePath, fileExt, isDev}) {
       const options = {
         standalone: true,
-        sourceMap: ifDef(snowpackConfig.installOptions.sourceMap, true),
+        sourceMap: snowpackConfig.installOptions.sourceMap ?? true,
         evaling: true,
         target: 'web',
         format: 'esm',
@@ -124,6 +126,7 @@ const plugin = function(snowpackConfig, pluginOptions) {
 
     async optimize({ buildDirectory }) {
       if (snowpackConfig.devOptions.bundle) {
+        debug(3, 'start optimize');
         const res = walk(buildDirectory);
         /*
             paths: array
@@ -131,40 +134,41 @@ const plugin = function(snowpackConfig, pluginOptions) {
             html: array
         */
         const entrypoints = pluginOptions.entrypoints.map(needle => res.js[needle.toLowerCase()]);
-        // console.log(entrypoints);
-
-        // console.log('Snowpack config:', snowpackConfig);
-        tmp.setGracefulCleanup();
-        const {name: tmpDir, removeCallback} = tmp.dirSync({prefix: 'esbuild_', unsafeCleanup: true});
+        debug(4, entrypoints);
+        debug(5, 'Snowpack config:', snowpackConfig);
+        const tmpDir = buildDirectory+'.tmp';
+        debug(6, tmpDir);
         const metaFile = path.join(tmpDir, 'meta.json');
         const q = (x) => x&&(x+':')||''
         const esbuildMsg = (type, text, loc) => (loc&&(q(loc.file)+q(loc.line)+q(loc.column)+' ')||'') + `esbuild bundler ${type}: ${text}`;
         let result = false;
         try {
+          debug(7, 'starting esbuild process');
           let result = buildSync({
-            // entryPoints: ['./build/static/app-root.js'],
             entryPoints: entrypoints,
             metafile: metaFile,
             outdir: tmpDir,
             bundle: true,
-            splitting: ifDef(pluginOptions.splitting, false),
+            splitting: pluginOptions.splitting ?? false,
             platform: 'browser',
             format: 'esm',
-            target: ifDef(pluginOptions.target, 'es2017'),
+            target: pluginOptions.target ?? 'es2017',
             strict: false,
             sourcemap: false,
-            minify: ifDef(pluginOptions.minify, snowpackConfig.buildOptions.minify),
+            minify: pluginOptions.minify ?? snowpackConfig.buildOptions.minify,
             color: true,
             logLevel: 'silent'
           });
+          debug(8, 'finished esbuild process without errors');
         } catch(e) {
+          debug(9, 'found some erros');
           for (const {loc, text} of e.errors||[]) console.log(esbuildMsg('error', text, loc));
           for (const {loc, text} of e.warnings||[]) console.log(esbuildMsg('warning', text, loc));
           return;
         }
         for (const {loc, text} of result.warnings||[]) console.log(esbuildMsg('warning', text, loc));
         const meta = JSON.parse(fs.readFileSync(metaFile, { encoding: 'utf-8' }));
-        // console.log(meta);
+        debug(10, meta);
         let lookup = {};
         let lookupMove = {};
         for (const k of Object.keys(meta.inputs)) {
@@ -175,6 +179,8 @@ const plugin = function(snowpackConfig, pluginOptions) {
           let short = path.basename(k);
           lookupMove[k] = lookup[short] || path.join(buildDirectory, short);
         }
+        debug(11, lookup);
+        debug(12, lookupMove);
         for (const k of Object.keys(meta.inputs)) {
           unlinkRmParent(k);
         }
@@ -182,12 +188,14 @@ const plugin = function(snowpackConfig, pluginOptions) {
         unlinkRmParent(path.join(snowpackConfig.devOptions.out, snowpackConfig.buildOptions.metaDir, 'env.js'));
         for (const [k, v] of Object.entries(lookupMove)) {
           try {
-            fse.moveSync(k, v, {overwrite: true}); // creates dst directories if needed
+            debug(13, k, v);
+            fs.mkdirSync(path.dirname(v), { recursive: true });
+            fs.renameSync(k, v);
           } catch(e) {
             console.log("Error moving files out of temp directory:", e);
           }
         }
-        removeCallback(); // cleanup and delete temp directory
+        unlinkRmParent(metaFile);
         snowpackConfig.buildOptions.minify = false; // not anymore required after this step!
       }
     } // end function optimize

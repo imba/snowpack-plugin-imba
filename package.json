@@ -32,6 +32,12 @@
         }
       ],
       [
+        "@pika/plugin-build-web",
+        {
+          "sourcemap": false
+        }
+      ],
+      [
         "@pika/plugin-build-types"
       ]
     ]
@@ -40,6 +46,7 @@
     "@pika/pack": "^0.5.0",
     "@pika/plugin-build-node": "^0.9.2",
     "@pika/plugin-build-types": "^0.9.2",
+    "@pika/plugin-build-web": "^0.9.2",
     "@pika/plugin-standard-pkg": "^0.9.2",
     "typescript": "^3.9.7"
   },
@@ -48,15 +55,10 @@
   },
   "homepage": "https://github.com/imba/imba-snowpack#readme",
   "dependencies": {
-    "convert-source-map": "^1.7.0",
     "esbuild": "^0.6.15",
-    "fdir": "^4.0.0",
-    "fs-extra": "^9.0.1",
     "imba": "^2.0.0-alpha.70",
-    "np": "^6.3.2",
     "snowpack": "^2.7.5",
     "source-map": "^0.7.3",
-    "tmp": "^0.2.1",
     "upath": "^1.2.0"
   }
 }
