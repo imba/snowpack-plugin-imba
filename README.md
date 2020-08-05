@@ -141,6 +141,7 @@ Most `imba-snowpack` plugin parameters are optional, except for `entrypoints`.
 - `target` specifies intended browser capabilities support. Check [esbuild](https://github.com/evanw/esbuild#javascript-syntax-support) for additional details.
 - `splitting` enables code splitting during production builds. This has not been tested.
 - `minify` does code minification during production builds.
+- `debug` adds debug logs.
 
 Any additional `imba-snowpack` plugin parameters are passed directly to the [Imba compiler](https://github.com/imba/imba/tree/master/src/compiler).
 
@@ -152,7 +153,8 @@ Any additional `imba-snowpack` plugin parameters are passed directly to the [Imb
       "entrypoints": ["main script for subproject 1", "main script for subproject 2"],
       "target": "es2017",
       "splitting": false,
-      "minify": true
+      "minify": true,
+      "debug": false
     }
   ]
 ]
