@@ -13,11 +13,11 @@ yarn --dev add imba-snowpack
 
 ## Usage
 
-Adapt `snowpack.config.json` with the plugin pointing to the main script. Remove any other bundling plugins from snowpack, such as `webpack` or `parcel`, they are not needed.
+Edit `snowpack.config.json` to add the `imba-snowpack` plugin. Remove any other bundling plugins from snowpack, such as `webpack` or `parcel`, they are not needed.
 
 ```js
 {
-  "plugins": [["imba-snowpack", { "entrypoints": ["app-root"]}]]
+  "plugins": ["imba-snowpack"]
 }
 ```
 
@@ -41,21 +41,10 @@ yarn --dev add imba-snowpack
     "src": "/static",
     "public": "/"
   },
-  "plugins": [
-    [
-      "imba-snowpack",
-      {
-        "entrypoints": ["app-root"]
-      }
-    ]
-  ],
-  "installOptions": {
-  },
+  "plugins": ["imba-snowpack"],
   "devOptions": {
     "open": "default",
     "bundle": true
-  },
-  "buildOptions": {
   }
 }
 ```
@@ -109,6 +98,23 @@ Edit `snowpack.config.json`
 - set `sourceMap` to `true` inside `installOptions`
 - set `bundle` to `false` inside `devOptions`
 
+```js
+{
+  "mount": {
+    "src": "/static",
+    "public": "/"
+  },
+  "plugins": ["imba-snowpack"],
+  "installOptions": {
+    "sourceMap": true
+  },
+  "devOptions": {
+    "open": "default",
+    "bundle": false
+  }
+}
+```
+
 Launch `npx snowpack build`
 
 Inspect the amazing Imba code transformation by uploading the generated `.js` files to the [sourcemap visualizer](https://sokra.github.io/source-map-visualization/).
@@ -135,9 +141,10 @@ Assets placed in source directories will be copied as is to destination director
 
 #### plugins
 
-Most `imba-snowpack` plugin parameters are optional, except for `entrypoints`.
+All `imba-snowpack` plugin parameters are optional.
 
 - `entrypoints` defines scripts loaded from html and forming the main entry points to your imba code. Can be `.imba` or `.js`. Only the script name is relevant, path and extension are ignored.
+- `smartscan` scans the `<script>` tags of all html files to find imba or javascript entrypoints.
 - `target` specifies intended browser capabilities support. Check [esbuild](https://github.com/evanw/esbuild#javascript-syntax-support) for additional details.
 - `splitting` enables code splitting during production builds. This has not been tested.
 - `minify` does code minification during production builds.
@@ -151,6 +158,7 @@ Any additional `imba-snowpack` plugin parameters are passed directly to the [Imb
     "imba-snowpack",
     {
       "entrypoints": ["main script for subproject 1", "main script for subproject 2"],
+      "smartscan": true,
       "target": "es2017",
       "splitting": false,
       "minify": true,

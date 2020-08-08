@@ -5,13 +5,30 @@ const path = require('upath'); // compatible with Windows idiosyncrasies
 const sm = require('source-map')
 const imbac = require('imba/dist/compiler.js');
 const {buildSync} = require('esbuild')
+const cheerio = require('cheerio');
 
 function debug(wp, ...args) {
   if (debug.active) console.log(`WP${wp}:`, ...args);
 }
 
+function* fetchRefs(html) {
+  const $ = cheerio.load(html);
+  const importRE = /import\b.*(['"])(\S+)\1[ \)]*;/g;
+  const allScripts = $('script').toArray();
+  for(let thisScript of allScripts) {
+    if (thisScript.attribs && thisScript.attribs.src) yield thisScript.attribs.src;
+    else if (thisScript.children) for (let child of thisScript.children) {
+      let groups;
+      const contents = child.data;
+      while ((groups = importRE.exec(contents)) !== null) {
+        yield(groups[2]);
+      }
+    }
+  }
+}
+
 function walk(dir) {
-  const paths = [];
+  // const paths = [];
   const dirs = [dir];
   let i = 0;
   let k = 0;
@@ -27,9 +44,8 @@ function walk(dir) {
           dirs.push(fullPath);
           k++;
         } else {
-          paths.push(fullPath);
+          // paths.push(fullPath);
           let lName = dirent.name.toLowerCase();
-          // let lName = dirent.name.toLowerCase();
           if (lName.endsWith('.js')) {
             js[lName.slice(0, -3)] = fullPath;
           } else if (lName.endsWith('.html')) {
@@ -41,7 +57,7 @@ function walk(dir) {
     i++;
   }
   return {
-    paths: paths,
+    // paths: paths,
     js: js,
     html: html
   };
@@ -80,17 +96,7 @@ async function prependCode(srcCode, prefix, srcMap={}) {
 // new plugin format supported by snowpack 2.7.0 onwards
 const plugin = function(snowpackConfig, pluginOptions) {
   if (pluginOptions.debug==true) debug.active = true;
-  debug(1, 'jose','pepe',35,'andi');
   const imbaHelper = "imba/dist/imba.js";
-  let entrypoints = pluginOptions.entrypoints;
-  if (typeof entrypoints === 'string') entrypoints = [entrypoints];
-  if (!entrypoints) {
-    console.log('Error: Missing script entrypoints!');
-    console.log('Add one or multiple entrypoints to the snowpack configuration:');
-    console.log('  "plugins": [ ["./plugin/imba-snowpack", {"entrypoints":["main.imba"]}] ]');
-    return;
-  }
-  pluginOptions.entrypoints = entrypoints.map((entry) => path.trimExt(path.basename(entry)));
   return {
     name: 'imba-snowpack',
     resolve: {
@@ -116,7 +122,7 @@ const plugin = function(snowpackConfig, pluginOptions) {
       options.targetPath = options.sourcePath.replace(/\.imba\d?$/,'.js');
       const helperPath = path.join(snowpackConfig.buildOptions.webModulesUrl, imbaHelper);
       const helper = `import '${helperPath}';\n`;
-      const source = fs.readFileSync(filePath, 'utf-8');
+      const source = fs.readFileSync(filePath, { encoding: 'utf-8'});
       const result = imbac.compile(source, options);
       let {js, sourcemap} = imbac.compile(source, options);
       delete sourcemap.maps; // debugging leftover?
@@ -127,13 +133,24 @@ const plugin = function(snowpackConfig, pluginOptions) {
     async optimize({ buildDirectory }) {
       if (snowpackConfig.devOptions.bundle) {
         debug(3, 'start optimize');
-        const res = walk(buildDirectory);
-        /*
-            paths: array
-            js: mapping
-            html: array
-        */
-        const entrypoints = pluginOptions.entrypoints.map(needle => res.js[needle.toLowerCase()]);
+        const resultWalk = walk(path.normalizeSafe(buildDirectory));
+        let entrypoints = pluginOptions.entrypoints||[];
+        if (typeof entrypoints === 'string') entrypoints = [entrypoints];
+        if (pluginOptions.smartscan ?? true) {
+          for (let htmlFile of resultWalk.html) {
+            const contents = fs.readFileSync(htmlFile, { encoding: 'utf-8'});
+            for (const ref of fetchRefs(contents)) entrypoints.push(ref);
+          }
+        }
+        entrypoints = entrypoints.map((entry) => resultWalk.js[path.trimExt(path.basename(entry)).toLowerCase()]);
+        // remove empty and duplicate values
+        entrypoints = [...new Set(entrypoints.filter((el)=>el))];
+        if (!entrypoints) {
+          console.error(`Missing script entrypoints!\n` +
+            `Add one or multiple entrypoints to the snowpack configuration:\n` +
+            `  "plugins": [ ["./plugin/imba-snowpack", {"entrypoints":["main.imba"]}] ]` );
+          return;
+        }
         debug(4, entrypoints);
         debug(5, 'Snowpack config:', snowpackConfig);
         const tmpDir = buildDirectory+'.tmp';

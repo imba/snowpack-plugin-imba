@@ -55,9 +55,10 @@
   },
   "homepage": "https://github.com/imba/imba-snowpack#readme",
   "dependencies": {
-    "esbuild": "^0.6.15",
-    "imba": "^2.0.0-alpha.70",
-    "snowpack": "^2.7.5",
+    "cheerio": "^1.0.0-rc.3",
+    "esbuild": "^0.6.18",
+    "imba": "^2.0.0-alpha.77",
+    "snowpack": "^2.7.7",
     "source-map": "^0.7.3",
     "upath": "^1.2.0"
   }
