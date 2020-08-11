@@ -18,7 +18,16 @@ Edit `snowpack.config.json` to add the `imba-snowpack` plugin. Remove any other 
 ```js
 {
   "plugins": ["imba-snowpack"]
-}
+},
+```
+
+### Add NPM Packages
+If you need to install any NPM packages, add the name to the install script in the `package.json` file. Then run `npm install` or `yarn` once again.
+
+```js
+"install": [
+  "cowsay"
+],
 ```
 
 ## Quick start
