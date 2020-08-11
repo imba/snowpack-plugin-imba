@@ -123,7 +123,6 @@ const plugin = function(snowpackConfig, pluginOptions) {
       const helperPath = path.join(snowpackConfig.buildOptions.webModulesUrl, imbaHelper);
       const helper = `import '${helperPath}';\n`;
       const source = fs.readFileSync(filePath, { encoding: 'utf-8'});
-      const result = imbac.compile(source, options);
       let {js, sourcemap} = imbac.compile(source, options);
       delete sourcemap.maps; // debugging leftover?
       js = await prependCode(js, helper, sourcemap);
