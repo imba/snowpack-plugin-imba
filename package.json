@@ -57,8 +57,8 @@
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
     "esbuild": "^0.6.18",
-    "imba": "^2.0.0-alpha.77",
-    "snowpack": "^2.7.7",
+    "imba": "^2.0.0-alpha.84",
+    "snowpack": "^2.8.0",
     "source-map": "^0.7.3",
     "upath": "^1.2.0"
   }
